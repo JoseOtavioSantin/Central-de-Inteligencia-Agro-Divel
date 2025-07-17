@@ -8,107 +8,105 @@
   <style>
     body {
       font-family: Arial, sans-serif;
-      background: #f1f1f1;
+      background: #f9f9f9;
       display: flex;
-      justify-content: center;
+      flex-direction: column;
       align-items: center;
-      height: 100vh;
+      justify-content: center;
+      min-height: 100vh;
+      padding: 20px;
     }
     .container {
       background: white;
       padding: 30px;
-      border-radius: 8px;
-      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+      border-radius: 12px;
+      box-shadow: 0 0 15px rgba(0,0,0,0.1);
+      max-width: 600px;
+      width: 100%;
     }
     input, button {
-      display: block;
       margin-top: 10px;
-      width: 100%;
       padding: 10px;
-      font-size: 16px;
+      width: 100%;
+      font-size: 14px;
     }
     #log {
       margin-top: 20px;
       background: #eee;
       padding: 10px;
-      height: 200px;
-      overflow-y: scroll;
+      max-height: 300px;
+      overflow: auto;
     }
   </style>
 </head>
 <body>
   <div class="container">
-    <h2>Importar Planilha de Revisões</h2>
+    <h2>Importar Revisões (planilha .xlsx)</h2>
     <input type="file" id="arquivo" accept=".xlsx" />
-    <button onclick="importar()">Importar</button>
+    <button onclick="importar()">Importar Dados</button>
     <pre id="log"></pre>
   </div>
 
   <script type="module">
     import { db } from './js/firebase.js';
-    import { doc, setDoc, getDoc } from 'https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore.js';
+    import { doc, setDoc } from 'https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore.js';
 
     window.importar = async function () {
       const input = document.getElementById('arquivo');
       const log = document.getElementById('log');
-      log.textContent = 'Lendo planilha...';
+      log.textContent = 'Lendo arquivo...';
+
+      if (!input.files.length) return alert('Selecione uma planilha!');
 
       const file = input.files[0];
-      if (!file) return alert('Selecione um arquivo .xlsx');
-
       const reader = new FileReader();
+
       reader.onload = async (e) => {
         const data = new Uint8Array(e.target.result);
         const workbook = XLSX.read(data, { type: 'array' });
         const sheet = workbook.Sheets[workbook.SheetNames[0]];
         const json = XLSX.utils.sheet_to_json(sheet);
 
-        log.textContent = 'Importando...\n';
+        log.textContent = 'Importando dados...\n';
 
         for (let i = 0; i < json.length; i++) {
           const linha = json[i];
-          const cliente = linha['Cliente'];
+          const cliente = linha['Cliente'] || '';
           const modelo = linha['Modelo'] || '';
           const chassis = linha['PIN'] || '';
           const horas = parseFloat(linha['Horas totais do motor']) || 0;
-          const local = linha['Locais dos concessionários'] || '';
+          const loc = linha['Locais dos concessionários'] || '';
 
           let filial = 'Desconhecida';
-          if (local.includes('RIO DO SUL')) filial = 'Rio do Sul';
-          else if (local.includes('CAMPOS NOVOS')) filial = 'Campos Novos';
-          else if (local.includes('LAGES')) filial = 'Lages';
+          if (loc.includes('RIO DO SUL')) filial = 'Rio do Sul';
+          else if (loc.includes('CAMPOS NOVOS')) filial = 'Campos Novos';
+          else if (loc.includes('LAGES')) filial = 'Lages';
 
-          const id = `${cliente}-${chassis}`.replace(/\s+/g, '-');
-          const docRef = doc(db, 'revisoes', id);
-          const docSnap = await getDoc(docRef);
+          const id = `${cliente}-${modelo}-${i}`.replace(/\s+/g, '-');
 
-          if (docSnap.exists()) {
-            const dadosAntigos = docSnap.data();
-            if (dadosAntigos.feito === undefined) {
-              await setDoc(docRef, { horas }, { merge: true });
-              log.textContent += `🔄 Atualizado: ${cliente}\n`;
-            } else {
-              log.textContent += `⏩ Já finalizado: ${cliente}\n`;
-            }
-          } else {
-            const novo = {
-              cliente,
-              modelo,
-              chassis,
-              horas,
-              filial,
-              feito: undefined,
-              motivo: '',
-              por: '',
-              data: ''
-            };
-            await setDoc(docRef, novo);
-            log.textContent += `✅ Inserido: ${cliente}\n`;
+          const docData = {
+            cliente,
+            modelo,
+            chassis,
+            horas,
+            filial,
+            feito: false,
+            motivo: '',
+            por: '',
+            data: ''
+          };
+
+          try {
+            await setDoc(doc(db, 'revisoes', id), docData);
+            log.textContent += `✅ ${cliente} - ${modelo} importado\n`;
+          } catch (err) {
+            log.textContent += `❌ Erro ao importar ${cliente}: ${err.message}\n`;
           }
         }
 
         log.textContent += '\nImportação finalizada!';
       };
+
       reader.readAsArrayBuffer(file);
     };
   </script>
