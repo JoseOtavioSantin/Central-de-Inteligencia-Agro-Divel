@@ -3,231 +3,114 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Dashboard - Revisões</title>
+  <title>Importar Revisões</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
   <style>
     body {
-      margin: 0;
-      padding: 0;
       font-family: Arial, sans-serif;
-      background-color: #f9f9f9;
-      color: #111;
+      background: #f1f1f1;
       display: flex;
       justify-content: center;
-      align-items: flex-start;
-      padding: 20px;
+      align-items: center;
+      height: 100vh;
     }
     .container {
-      background: #fff;
-      border-radius: 12px;
-      box-shadow: 0 0 15px rgba(0, 0, 0, 0.05);
-      width: 100%;
-      max-width: 1000px;
-      overflow: hidden;
-    }
-    header {
-      background-color: #212735;
-      padding: 20px;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      color: #fff;
-      border-top-left-radius: 12px;
-      border-top-right-radius: 12px;
-    }
-    header h1 {
-      margin: 0;
-      font-size: 18px;
-    }
-    header button {
-      background: #fff;
-      color: #212735;
-      border: none;
-      padding: 8px 16px;
-      border-radius: 6px;
-      font-weight: bold;
-      cursor: pointer;
-    }
-    main {
-      padding: 20px;
-    }
-    table {
-      width: 100%;
-      border-collapse: collapse;
-    }
-    th, td {
-      border-bottom: 1px solid #ddd;
-      padding: 12px 10px;
-      text-align: left;
-    }
-    th {
-      background-color: #f0f0f0;
-    }
-    button.acao {
-      padding: 6px 12px;
-      margin-right: 5px;
-      border: none;
-      border-radius: 4px;
-      cursor: pointer;
-      background-color: #212735;
-      color: white;
-      font-size: 12px;
-    }
-    .modal {
-      display: none;
-      position: fixed;
-      z-index: 1000;
-      left: 0;
-      top: 0;
-      width: 100%;
-      height: 100%;
-      overflow: auto;
-      background-color: rgba(0, 0, 0, 0.5);
-    }
-    .modal-content {
-      background-color: #fff;
-      margin: 10% auto;
-      padding: 20px;
-      border: 1px solid #888;
-      width: 80%;
-      max-width: 400px;
+      background: white;
+      padding: 30px;
       border-radius: 8px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
     }
-    .modal-content input {
+    input, button {
+      display: block;
+      margin-top: 10px;
       width: 100%;
-      padding: 8px;
-      margin-bottom: 10px;
-      border-radius: 4px;
-      border: 1px solid #ccc;
+      padding: 10px;
+      font-size: 16px;
     }
-    .modal-content button {
-      padding: 8px 16px;
-      border: none;
-      border-radius: 4px;
-      background-color: #212735;
-      color: #fff;
-      cursor: pointer;
+    #log {
+      margin-top: 20px;
+      background: #eee;
+      padding: 10px;
+      height: 200px;
+      overflow-y: scroll;
     }
   </style>
 </head>
 <body>
   <div class="container">
-    <header>
-      <h1>Revisões Pendentes - <span id="filial"></span></h1>
-      <button onclick="logout()">Sair</button>
-    </header>
-
-    <main>
-      <table>
-        <thead>
-          <tr>
-            <th>Cliente</th>
-            <th>Modelo</th>
-            <th>Chassis</th>
-            <th>Horas Motor</th>
-            <th>Ação</th>
-          </tr>
-        </thead>
-        <tbody id="tabela-revisoes"></tbody>
-      </table>
-    </main>
-  </div>
-
-  <div id="motivoModal" class="modal">
-    <div class="modal-content">
-      <h3>Motivo da não realização</h3>
-      <input id="motivoInput" placeholder="Descreva o motivo..." />
-      <button onclick="salvarMotivo()">Salvar</button>
-    </div>
+    <h2>Importar Planilha de Revisões</h2>
+    <input type="file" id="arquivo" accept=".xlsx" />
+    <button onclick="importar()">Importar</button>
+    <pre id="log"></pre>
   </div>
 
   <script type="module">
-    import { auth, db } from './js/firebase.js';
-    import { onAuthStateChanged, signOut } from 'https://www.gstatic.com/firebasejs/9.6.1/firebase-auth.js';
-    import { collection, getDocs, doc, setDoc, getDoc } from 'https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore.js';
+    import { db } from './js/firebase.js';
+    import { doc, setDoc, getDoc } from 'https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore.js';
 
-    const tabela = document.getElementById("tabela-revisoes");
-    const filialSpan = document.getElementById("filial");
-    const modal = document.getElementById("motivoModal");
-    const motivoInput = document.getElementById("motivoInput");
-    let motivoId = "";
+    window.importar = async function () {
+      const input = document.getElementById('arquivo');
+      const log = document.getElementById('log');
+      log.textContent = 'Lendo planilha...';
 
-    const usuario = localStorage.getItem("usuarioLogado") || "";
-    const filial = localStorage.getItem("filialLogada") || "";
-    filialSpan.textContent = filial;
+      const file = input.files[0];
+      if (!file) return alert('Selecione um arquivo .xlsx');
 
-    onAuthStateChanged(auth, async (user) => {
-      if (!user) window.location.href = 'index.html';
+      const reader = new FileReader();
+      reader.onload = async (e) => {
+        const data = new Uint8Array(e.target.result);
+        const workbook = XLSX.read(data, { type: 'array' });
+        const sheet = workbook.Sheets[workbook.SheetNames[0]];
+        const json = XLSX.utils.sheet_to_json(sheet);
 
-      const querySnapshot = await getDocs(collection(db, "revisoes"));
-      tabela.innerHTML = "";
+        log.textContent = 'Importando...\n';
 
-      querySnapshot.forEach(docu => {
-        const data = docu.data();
-        if (data.filial !== filial || data.feito !== undefined) return;
+        for (let i = 0; i < json.length; i++) {
+          const linha = json[i];
+          const cliente = linha['Cliente'];
+          const modelo = linha['Modelo'] || '';
+          const chassis = linha['PIN'] || '';
+          const horas = parseFloat(linha['Horas totais do motor']) || 0;
+          const local = linha['Locais dos concessionários'] || '';
 
-        const tr = document.createElement("tr");
-        tr.innerHTML = `
-          <td>${data.cliente}</td>
-          <td>${data.modelo}</td>
-          <td>${data.chassis || '-'}</td>
-          <td>${data.horas}</td>
-          <td>
-            <button class="acao" onclick="marcar('${docu.id}', true)">SIM</button>
-            <button class="acao" onclick="mostrarPopup('${docu.id}')">NÃO</button>
-          </td>
-        `;
-        tabela.appendChild(tr);
-      });
-    });
+          let filial = 'Desconhecida';
+          if (local.includes('RIO DO SUL')) filial = 'Rio do Sul';
+          else if (local.includes('CAMPOS NOVOS')) filial = 'Campos Novos';
+          else if (local.includes('LAGES')) filial = 'Lages';
 
-    window.marcar = async function (id, fez) {
-      const docRef = doc(db, "revisoes", id);
-      const existing = await getDoc(docRef);
-      const oldData = existing.exists() ? existing.data() : {};
-      await setDoc(docRef, {
-        ...oldData,
-        feito: fez,
-        motivo: fez ? "" : null,
-        por: usuario,
-        data: new Date().toISOString(),
-      }, { merge: true });
-      location.reload();
-    }
+          const id = `${cliente}-${chassis}`.replace(/\s+/g, '-');
+          const docRef = doc(db, 'revisoes', id);
+          const docSnap = await getDoc(docRef);
 
-    window.mostrarPopup = function(id) {
-      motivoId = id;
-      motivoInput.value = "";
-      modal.style.display = "block";
-    }
+          if (docSnap.exists()) {
+            const dadosAntigos = docSnap.data();
+            if (dadosAntigos.feito === undefined) {
+              await setDoc(docRef, { horas }, { merge: true });
+              log.textContent += `🔄 Atualizado: ${cliente}\n`;
+            } else {
+              log.textContent += `⏩ Já finalizado: ${cliente}\n`;
+            }
+          } else {
+            const novo = {
+              cliente,
+              modelo,
+              chassis,
+              horas,
+              filial,
+              feito: undefined,
+              motivo: '',
+              por: '',
+              data: ''
+            };
+            await setDoc(docRef, novo);
+            log.textContent += `✅ Inserido: ${cliente}\n`;
+          }
+        }
 
-    window.salvarMotivo = async function() {
-      const motivo = motivoInput.value;
-      if (!motivo) return alert("Preencha o motivo!");
-      const docRef = doc(db, "revisoes", motivoId);
-      const existing = await getDoc(docRef);
-      const oldData = existing.exists() ? existing.data() : {};
-      await setDoc(docRef, {
-        ...oldData,
-        feito: false,
-        motivo: motivo,
-        por: usuario,
-        data: new Date().toISOString(),
-      }, { merge: true });
-      modal.style.display = "none";
-      location.reload();
-    }
-
-    window.onclick = function(event) {
-      if (event.target == modal) {
-        modal.style.display = "none";
-      }
-    }
-
-    window.logout = async function () {
-      await signOut(auth);
-      localStorage.clear();
-      window.location.href = "index.html";
-    }
+        log.textContent += '\nImportação finalizada!';
+      };
+      reader.readAsArrayBuffer(file);
+    };
   </script>
 </body>
 </html>
