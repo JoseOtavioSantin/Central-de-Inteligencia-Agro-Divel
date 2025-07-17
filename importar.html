@@ -73,6 +73,7 @@
           const linha = json[i];
           const cliente = linha['Cliente'] || '';
           const modelo = linha['Modelo'] || '';
+          const chassis = linha['PIN'] || '';
           const horas = parseFloat(linha['Horas totais do motor']) || 0;
           const loc = linha['Locais dos concessionários'] || '';
 
@@ -86,6 +87,7 @@
           const docData = {
             cliente,
             modelo,
+            chassis,
             horas,
             filial,
             feito: false,
