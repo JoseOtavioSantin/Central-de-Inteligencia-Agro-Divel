@@ -80,7 +80,7 @@
     const filialSpan = document.getElementById("filial");
 
     const usuario = localStorage.getItem("usuarioLogado") || "";
-    const filial = usuario.includes("rio") ? "Rio do Sul" : usuario.includes("campos") ? "Campos Novos" : "Lages";
+    const filial = localStorage.getItem("filialLogada") || "";
     filialSpan.textContent = filial;
 
     onAuthStateChanged(auth, async (user) => {
