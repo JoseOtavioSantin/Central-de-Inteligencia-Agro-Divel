@@ -62,22 +62,6 @@
     th {
       background-color: #f0f0f0;
     }
-    .botao-status {
-      padding: 6px 12px;
-      border: none;
-      border-radius: 4px;
-      font-size: 12px;
-      font-weight: bold;
-      cursor: default;
-    }
-    .sim {
-      background-color: #4caf50;
-      color: white;
-    }
-    .nao {
-      background-color: #f44336;
-      color: white;
-    }
     button.acao {
       padding: 6px 12px;
       margin-right: 5px;
@@ -140,7 +124,6 @@
             <th>Modelo</th>
             <th>Chassis</th>
             <th>Horas Motor</th>
-            <th>Revisão Feita</th>
             <th>Ação</th>
           </tr>
         </thead>
@@ -160,7 +143,7 @@
   <script type="module">
     import { auth, db } from './js/firebase.js';
     import { onAuthStateChanged, signOut } from 'https://www.gstatic.com/firebasejs/9.6.1/firebase-auth.js';
-    import { collection, getDocs, doc, setDoc } from 'https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore.js';
+    import { collection, getDocs, doc, setDoc, deleteDoc } from 'https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore.js';
 
     const tabela = document.getElementById("tabela-revisoes");
     const filialSpan = document.getElementById("filial");
@@ -180,9 +163,7 @@
 
       querySnapshot.forEach(docu => {
         const data = docu.data();
-        if (data.filial !== filial) return;
-
-        const status = data.feito ? '<span class="botao-status sim">SIM</span>' : '<span class="botao-status nao">NÃO</span>';
+        if (data.filial !== filial || data.feito !== undefined) return;
 
         const tr = document.createElement("tr");
         tr.innerHTML = `
@@ -190,7 +171,6 @@
           <td>${data.modelo}</td>
           <td>${data.chassis || '-'}</td>
           <td>${data.horas}</td>
-          <td>${status}</td>
           <td>
             <button class="acao" onclick="marcar('${docu.id}', true)">SIM</button>
             <button class="acao" onclick="mostrarPopup('${docu.id}')">NÃO</button>
@@ -207,7 +187,6 @@
         por: usuario,
         data: new Date().toISOString(),
       }, { merge: true });
-      alert("Atualizado!");
       location.reload();
     }
 
@@ -227,7 +206,6 @@
         data: new Date().toISOString(),
       }, { merge: true });
       modal.style.display = "none";
-      alert("Motivo salvo!");
       location.reload();
     }
 
