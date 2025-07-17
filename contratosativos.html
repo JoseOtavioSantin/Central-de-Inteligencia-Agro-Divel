@@ -1,0 +1,246 @@
+
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Contratos Ativos</title>
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      font-family: Arial, sans-serif;
+      background-color: #f9f9f9;
+      color: #111;
+      display: flex;
+      justify-content: center;
+      align-items: flex-start;
+      padding: 20px;
+    }
+    .container {
+      background: #fff;
+      border-radius: 12px;
+      box-shadow: 0 0 15px rgba(0, 0, 0, 0.05);
+      width: 100%;
+      max-width: 1000px;
+      overflow: hidden;
+    }
+    header {
+      background-color: #212735;
+      padding: 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      color: #fff;
+      border-top-left-radius: 12px;
+      border-top-right-radius: 12px;
+    }
+    header h1 {
+      margin: 0;
+      font-size: 18px;
+    }
+    header button {
+      background: #fff;
+      color: #212735;
+      border: none;
+      padding: 8px 16px;
+      border-radius: 6px;
+      font-weight: bold;
+      cursor: pointer;
+    }
+    main {
+      padding: 20px;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+    th, td {
+      border-bottom: 1px solid #ddd;
+      padding: 12px 10px;
+      text-align: left;
+    }
+    th {
+      background-color: #f0f0f0;
+    }
+    button.acao {
+      padding: 6px 12px;
+      margin: 2px;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      background-color: #ff4d4d;
+      color: white;
+      font-size: 12px;
+    }
+    button.feito {
+      background-color: #212735 !important;
+    }
+    .modal {
+      display: none;
+      position: fixed;
+      z-index: 1000;
+      left: 0;
+      top: 0;
+      width: 100%;
+      height: 100%;
+      overflow: auto;
+      background-color: rgba(0, 0, 0, 0.5);
+    }
+    .modal-content {
+      background-color: #fff;
+      margin: 10% auto;
+      padding: 20px;
+      border: 1px solid #888;
+      width: 80%;
+      max-width: 400px;
+      border-radius: 8px;
+    }
+    .modal-content input {
+      width: 95%;
+      padding: 8px;
+      margin-bottom: 10px;
+      border-radius: 4px;
+      border: 1px solid #ccc;
+    }
+    .modal-content button {
+      padding: 8px 16px;
+      border: none;
+      border-radius: 4px;
+      background-color: #212735;
+      color: #fff;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>Contratos Ativos - <span id="filial"></span></h1>
+      <button onclick="voltar()">VOLTAR</button>
+    </header>
+
+    <main>
+      <table>
+        <thead>
+          <tr>
+            <th>Cliente</th>
+            <th>Modelo</th>
+            <th>Chassi</th>
+            <th>Revisões</th>
+            <th>Fim Vigência</th>
+          </tr>
+        </thead>
+        <tbody id="tabela-contratos"></tbody>
+      </table>
+    </main>
+  </div>
+
+  <div id="modalRevisao" class="modal">
+    <div class="modal-content">
+      <h3>Preencher revisão <span id="rev-span"></span></h3>
+      <input id="horasInput" type="number" placeholder="Horas atuais" />
+      <input id="osInput" placeholder="Número da OS" />
+      <input id="dataInput" type="date" />
+      <button onclick="salvarRevisao()">Salvar</button>
+    </div>
+  </div>
+
+  <script type="module">
+    import { auth, db } from './js/firebase.js';
+    import { onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/9.6.1/firebase-auth.js';
+    import { collection, getDocs, doc, getDoc, setDoc } from 'https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore.js';
+
+    const tabela = document.getElementById("tabela-contratos");
+    const filialSpan = document.getElementById("filial");
+    const modal = document.getElementById("modalRevisao");
+    const horasInput = document.getElementById("horasInput");
+    const osInput = document.getElementById("osInput");
+    const dataInput = document.getElementById("dataInput");
+    const revSpan = document.getElementById("rev-span");
+
+    const usuario = localStorage.getItem("usuarioLogado") || "";
+    const filial = localStorage.getItem("filialLogada") || "";
+    filialSpan.textContent = filial;
+
+    let contratoIdSelecionado = "";
+    let revisaoSelecionada = "";
+    let botaoAtual = null;
+
+    onAuthStateChanged(auth, async (user) => {
+      if (!user) window.location.href = 'index.html';
+      const snapshot = await getDocs(collection(db, "contratos"));
+      tabela.innerHTML = "";
+
+      snapshot.forEach(docSnap => {
+        const contrato = docSnap.data();
+        const id = docSnap.id;
+        if (contrato.filial !== filial) return;
+
+        const linha = document.createElement("tr");
+
+        let botoes = "";
+        for (let rev in contrato.revisoes) {
+          const r = contrato.revisoes[rev];
+          const statusClass = r.feito ? "feito" : "acao";
+          botoes += `<button class="${statusClass}" onclick="abrirModal(this, '${rev}', '${id}')">${r.horas}</button>`;
+        }
+
+        linha.innerHTML = `
+          <td>${contrato.cliente}</td>
+          <td>${contrato.modelo}</td>
+          <td>${contrato.chassi}</td>
+          <td>${botoes}</td>
+          <td>${contrato.vigencia_fim}</td>
+        `;
+        tabela.appendChild(linha);
+      });
+    });
+
+    window.abrirModal = function(botao, revisao, contratoId) {
+      botaoAtual = botao;
+      revisaoSelecionada = revisao;
+      contratoIdSelecionado = contratoId;
+      revSpan.textContent = revisao;
+      horasInput.value = "";
+      osInput.value = "";
+      dataInput.value = "";
+      modal.style.display = "block";
+    }
+
+    window.salvarRevisao = async function() {
+      const horas = horasInput.value;
+      const os = osInput.value;
+      const data = dataInput.value;
+
+      if (!horas || !os || !data) return alert("Preencha todos os campos");
+
+      const docRef = doc(db, "contratos", contratoIdSelecionado);
+      const docSnap = await getDoc(docRef);
+      const contrato = docSnap.data();
+
+      contrato.revisoes[revisaoSelecionada] = {
+        feito: true,
+        horas,
+        os,
+        data
+      };
+
+      await setDoc(docRef, contrato);
+      botaoAtual.classList.remove("acao");
+      botaoAtual.classList.add("feito");
+      modal.style.display = "none";
+    }
+
+    window.onclick = function(event) {
+      if (event.target === modal) {
+        modal.style.display = "none";
+      }
+    }
+
+    window.voltar = function () {
+      window.location.href = "menu.html";
+    }
+  </script>
+</body>
+</html>
