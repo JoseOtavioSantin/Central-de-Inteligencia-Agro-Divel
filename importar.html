@@ -51,6 +51,27 @@
     import { db } from './js/firebase.js';
     import { doc, setDoc } from 'https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore.js';
 
+    function getTipoRevisao(horas, modelo) {
+      let base = 0;
+      let proxima = 0;
+      let tipo = '';
+
+      const isColheitadeira = modelo.startsWith('CR') || modelo.toLowerCase().includes('colheit');
+
+      if (isColheitadeira) {
+        base = horas < 100 ? 100 : 300;
+        proxima = base;
+        while (proxima <= horas) proxima += 300;
+      } else {
+        base = horas < 50 ? 50 : 300;
+        proxima = base;
+        while (proxima <= horas) proxima += 300;
+      }
+
+      tipo = `Revisão 300h`;
+      return tipo;
+    }
+
     window.importar = async function () {
       const input = document.getElementById('arquivo');
       const log = document.getElementById('log');
@@ -81,10 +102,7 @@
           else if (loc.includes('CAMPOS NOVOS')) filial = 'Campos Novos';
           else if (loc.includes('LAGES')) filial = 'Lages';
 
-          let tipo = '';
-          if (horas <= 300) tipo = 'Revisão 250h';
-          else if (horas <= 600) tipo = 'Revisão 500h';
-          else tipo = 'Revisão 1000h';
+          const tipo = getTipoRevisao(horas, modelo);
 
           const id = `${cliente}-${modelo}-${i}`.replace(/\s+/g, '-');
 
