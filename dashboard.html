@@ -5,46 +5,39 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Dashboard - Revisões</title>
   <style>
-    * {
-      box-sizing: border-box;
-      font-family: Arial, sans-serif;
-    }
-
     body {
       margin: 0;
       padding: 0;
+      font-family: Arial, sans-serif;
       background-color: #f9f9f9;
+      color: #111;
       display: flex;
       justify-content: center;
-      align-items: center;
-      min-height: 100vh;
+      align-items: flex-start;
+      padding: 20px;
     }
-
     .container {
-      width: 100%;
-      max-width: 900px;
-      background: white;
+      background: #fff;
       border-radius: 12px;
       box-shadow: 0 0 15px rgba(0, 0, 0, 0.05);
+      width: 100%;
+      max-width: 1000px;
       overflow: hidden;
     }
-
     header {
       background-color: #212735;
-      color: #fff;
       padding: 20px;
       display: flex;
       justify-content: space-between;
       align-items: center;
+      color: #fff;
       border-top-left-radius: 12px;
       border-top-right-radius: 12px;
     }
-
     header h1 {
-      font-size: 18px;
       margin: 0;
+      font-size: 18px;
     }
-
     header button {
       background: #fff;
       color: #212735;
@@ -54,32 +47,21 @@
       font-weight: bold;
       cursor: pointer;
     }
-
     main {
       padding: 20px;
     }
-
     table {
       width: 100%;
       border-collapse: collapse;
-      margin-top: 20px;
     }
-
     th, td {
       border-bottom: 1px solid #ddd;
       padding: 12px 10px;
       text-align: left;
-      font-size: 14px;
     }
-
     th {
       background-color: #f0f0f0;
     }
-
-    tr:nth-child(even) {
-      background-color: #f9f9f9;
-    }
-
     button {
       padding: 6px 12px;
       margin-right: 5px;
@@ -90,7 +72,6 @@
       color: white;
       font-size: 12px;
     }
-
     .motivo-input {
       width: 100%;
       margin-top: 8px;
@@ -111,11 +92,11 @@
       <table>
         <thead>
           <tr>
-              <th>Cliente</th>
-              <th>Modelo</th>
-              <th>Chassis</th>
-              <th>Horas Motor</th>
-              <th>Status</th>
+            <th>Cliente</th>
+            <th>Modelo</th>
+            <th>Chassis</th>
+            <th>Horas Motor</th>
+            <th>Status</th>
           </tr>
         </thead>
         <tbody id="tabela-revisoes"></tbody>
@@ -149,8 +130,8 @@
         tr.innerHTML = `
           <td>${data.cliente}</td>
           <td>${data.modelo}</td>
+          <td>${data.chassis || '-'}</td>
           <td>${data.horas}</td>
-          <td>${data.tipo}</td>
           <td>
             <button onclick="marcar('${docu.id}', true)">Fez</button>
             <button onclick="mostrarMotivo('${docu.id}')">Não Fez</button>
