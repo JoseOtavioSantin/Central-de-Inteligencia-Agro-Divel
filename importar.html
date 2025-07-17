@@ -3,112 +3,231 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Importar Revisões</title>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+  <title>Dashboard - Revisões</title>
   <style>
     body {
+      margin: 0;
+      padding: 0;
       font-family: Arial, sans-serif;
-      background: #f9f9f9;
+      background-color: #f9f9f9;
+      color: #111;
       display: flex;
-      flex-direction: column;
-      align-items: center;
       justify-content: center;
-      min-height: 100vh;
+      align-items: flex-start;
       padding: 20px;
     }
     .container {
-      background: white;
-      padding: 30px;
+      background: #fff;
       border-radius: 12px;
-      box-shadow: 0 0 15px rgba(0,0,0,0.1);
-      max-width: 600px;
+      box-shadow: 0 0 15px rgba(0, 0, 0, 0.05);
       width: 100%;
+      max-width: 1000px;
+      overflow: hidden;
     }
-    input, button {
-      margin-top: 10px;
-      padding: 10px;
+    header {
+      background-color: #212735;
+      padding: 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      color: #fff;
+      border-top-left-radius: 12px;
+      border-top-right-radius: 12px;
+    }
+    header h1 {
+      margin: 0;
+      font-size: 18px;
+    }
+    header button {
+      background: #fff;
+      color: #212735;
+      border: none;
+      padding: 8px 16px;
+      border-radius: 6px;
+      font-weight: bold;
+      cursor: pointer;
+    }
+    main {
+      padding: 20px;
+    }
+    table {
       width: 100%;
-      font-size: 14px;
+      border-collapse: collapse;
     }
-    #log {
-      margin-top: 20px;
-      background: #eee;
-      padding: 10px;
-      max-height: 300px;
+    th, td {
+      border-bottom: 1px solid #ddd;
+      padding: 12px 10px;
+      text-align: left;
+    }
+    th {
+      background-color: #f0f0f0;
+    }
+    button.acao {
+      padding: 6px 12px;
+      margin-right: 5px;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      background-color: #212735;
+      color: white;
+      font-size: 12px;
+    }
+    .modal {
+      display: none;
+      position: fixed;
+      z-index: 1000;
+      left: 0;
+      top: 0;
+      width: 100%;
+      height: 100%;
       overflow: auto;
+      background-color: rgba(0, 0, 0, 0.5);
+    }
+    .modal-content {
+      background-color: #fff;
+      margin: 10% auto;
+      padding: 20px;
+      border: 1px solid #888;
+      width: 80%;
+      max-width: 400px;
+      border-radius: 8px;
+    }
+    .modal-content input {
+      width: 100%;
+      padding: 8px;
+      margin-bottom: 10px;
+      border-radius: 4px;
+      border: 1px solid #ccc;
+    }
+    .modal-content button {
+      padding: 8px 16px;
+      border: none;
+      border-radius: 4px;
+      background-color: #212735;
+      color: #fff;
+      cursor: pointer;
     }
   </style>
 </head>
 <body>
   <div class="container">
-    <h2>Importar Revisões (planilha .xlsx)</h2>
-    <input type="file" id="arquivo" accept=".xlsx" />
-    <button onclick="importar()">Importar Dados</button>
-    <pre id="log"></pre>
+    <header>
+      <h1>Revisões Pendentes - <span id="filial"></span></h1>
+      <button onclick="logout()">Sair</button>
+    </header>
+
+    <main>
+      <table>
+        <thead>
+          <tr>
+            <th>Cliente</th>
+            <th>Modelo</th>
+            <th>Chassis</th>
+            <th>Horas Motor</th>
+            <th>Ação</th>
+          </tr>
+        </thead>
+        <tbody id="tabela-revisoes"></tbody>
+      </table>
+    </main>
+  </div>
+
+  <div id="motivoModal" class="modal">
+    <div class="modal-content">
+      <h3>Motivo da não realização</h3>
+      <input id="motivoInput" placeholder="Descreva o motivo..." />
+      <button onclick="salvarMotivo()">Salvar</button>
+    </div>
   </div>
 
   <script type="module">
-    import { db } from './js/firebase.js';
-    import { doc, setDoc } from 'https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore.js';
+    import { auth, db } from './js/firebase.js';
+    import { onAuthStateChanged, signOut } from 'https://www.gstatic.com/firebasejs/9.6.1/firebase-auth.js';
+    import { collection, getDocs, doc, setDoc, getDoc } from 'https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore.js';
 
-    window.importar = async function () {
-      const input = document.getElementById('arquivo');
-      const log = document.getElementById('log');
-      log.textContent = 'Lendo arquivo...';
+    const tabela = document.getElementById("tabela-revisoes");
+    const filialSpan = document.getElementById("filial");
+    const modal = document.getElementById("motivoModal");
+    const motivoInput = document.getElementById("motivoInput");
+    let motivoId = "";
 
-      if (!input.files.length) return alert('Selecione uma planilha!');
+    const usuario = localStorage.getItem("usuarioLogado") || "";
+    const filial = localStorage.getItem("filialLogada") || "";
+    filialSpan.textContent = filial;
 
-      const file = input.files[0];
-      const reader = new FileReader();
+    onAuthStateChanged(auth, async (user) => {
+      if (!user) window.location.href = 'index.html';
 
-      reader.onload = async (e) => {
-        const data = new Uint8Array(e.target.result);
-        const workbook = XLSX.read(data, { type: 'array' });
-        const sheet = workbook.Sheets[workbook.SheetNames[0]];
-        const json = XLSX.utils.sheet_to_json(sheet);
+      const querySnapshot = await getDocs(collection(db, "revisoes"));
+      tabela.innerHTML = "";
 
-        log.textContent = 'Importando dados...\n';
+      querySnapshot.forEach(docu => {
+        const data = docu.data();
+        if (data.filial !== filial || data.feito !== undefined) return;
 
-        for (let i = 0; i < json.length; i++) {
-          const linha = json[i];
-          const cliente = linha['Cliente'] || '';
-          const modelo = linha['Modelo'] || '';
-          const chassis = linha['PIN'] || '';
-          const horas = parseFloat(linha['Horas totais do motor']) || 0;
-          const loc = linha['Locais dos concessionários'] || '';
+        const tr = document.createElement("tr");
+        tr.innerHTML = `
+          <td>${data.cliente}</td>
+          <td>${data.modelo}</td>
+          <td>${data.chassis || '-'}</td>
+          <td>${data.horas}</td>
+          <td>
+            <button class="acao" onclick="marcar('${docu.id}', true)">SIM</button>
+            <button class="acao" onclick="mostrarPopup('${docu.id}')">NÃO</button>
+          </td>
+        `;
+        tabela.appendChild(tr);
+      });
+    });
 
-          let filial = 'Desconhecida';
-          if (loc.includes('RIO DO SUL')) filial = 'Rio do Sul';
-          else if (loc.includes('CAMPOS NOVOS')) filial = 'Campos Novos';
-          else if (loc.includes('LAGES')) filial = 'Lages';
+    window.marcar = async function (id, fez) {
+      const docRef = doc(db, "revisoes", id);
+      const existing = await getDoc(docRef);
+      const oldData = existing.exists() ? existing.data() : {};
+      await setDoc(docRef, {
+        ...oldData,
+        feito: fez,
+        motivo: fez ? "" : null,
+        por: usuario,
+        data: new Date().toISOString(),
+      }, { merge: true });
+      location.reload();
+    }
 
-          const id = `${cliente}-${modelo}-${i}`.replace(/\s+/g, '-');
+    window.mostrarPopup = function(id) {
+      motivoId = id;
+      motivoInput.value = "";
+      modal.style.display = "block";
+    }
 
-          const docData = {
-            cliente,
-            modelo,
-            chassis,
-            horas,
-            filial,
-            feito: false,
-            motivo: '',
-            por: '',
-            data: ''
-          };
+    window.salvarMotivo = async function() {
+      const motivo = motivoInput.value;
+      if (!motivo) return alert("Preencha o motivo!");
+      const docRef = doc(db, "revisoes", motivoId);
+      const existing = await getDoc(docRef);
+      const oldData = existing.exists() ? existing.data() : {};
+      await setDoc(docRef, {
+        ...oldData,
+        feito: false,
+        motivo: motivo,
+        por: usuario,
+        data: new Date().toISOString(),
+      }, { merge: true });
+      modal.style.display = "none";
+      location.reload();
+    }
 
-          try {
-            await setDoc(doc(db, 'revisoes', id), docData);
-            log.textContent += `✅ ${cliente} - ${modelo} importado\n`;
-          } catch (err) {
-            log.textContent += `❌ Erro ao importar ${cliente}: ${err.message}\n`;
-          }
-        }
+    window.onclick = function(event) {
+      if (event.target == modal) {
+        modal.style.display = "none";
+      }
+    }
 
-        log.textContent += '\nImportação finalizada!';
-      };
-
-      reader.readAsArrayBuffer(file);
-    };
+    window.logout = async function () {
+      await signOut(auth);
+      localStorage.clear();
+      window.location.href = "index.html";
+    }
   </script>
 </body>
 </html>
