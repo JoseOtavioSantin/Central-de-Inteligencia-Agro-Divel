@@ -204,14 +204,21 @@
       });
     });
 
-    window.abrirModal = function(botao, revisao, contratoId) {
+    window.abrirModal = async function(botao, revisao, contratoId) {
       botaoAtual = botao;
       revisaoSelecionada = revisao;
       contratoIdSelecionado = contratoId;
       revSpan.textContent = revisao;
-      horasInput.value = "";
-      osInput.value = "";
-      dataInput.value = "";
+    
+      const docRef = doc(db, "contratos", contratoId);
+      const docSnap = await getDoc(docRef);
+      const contrato = docSnap.data();
+      const revisaoDados = contrato.revisoes[revisao];
+    
+      horasInput.value = revisaoDados.horas || "";
+      osInput.value = revisaoDados.os || "";
+      dataInput.value = revisaoDados.data || "";
+    
       modal.style.display = "block";
     }
 
