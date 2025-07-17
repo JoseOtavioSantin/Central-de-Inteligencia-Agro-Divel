@@ -52,23 +52,24 @@
     import { doc, setDoc } from 'https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore.js';
 
     function getTipoRevisao(horas, modelo) {
-      let base = 0;
-      let proxima = 0;
-      let tipo = '';
-
       const isColheitadeira = modelo.startsWith('CR') || modelo.toLowerCase().includes('colheit');
 
-      if (isColheitadeira) {
-        base = horas < 100 ? 100 : 300;
-        proxima = base;
-        while (proxima <= horas) proxima += 300;
-      } else {
-        base = horas < 50 ? 50 : 300;
-        proxima = base;
-        while (proxima <= horas) proxima += 300;
+      let pontosRevisao = isColheitadeira ? [100, 300, 600, 900, 1200] : [50, 300, 600, 900, 1200];
+      let tipo = '';
+
+      for (let i = 0; i < pontosRevisao.length; i++) {
+        if (horas < pontosRevisao[i]) {
+          tipo = `Revisão ${pontosRevisao[i]}h`;
+          break;
+        }
       }
 
-      tipo = `Revisão 300h`;
+      if (!tipo) {
+        // Se passou de 1200h, continua de 300 em 300
+        let proxima = Math.ceil((horas - 1200) / 300) * 300 + 1200;
+        tipo = `Revisão ${proxima}h`;
+      }
+
       return tipo;
     }
 
