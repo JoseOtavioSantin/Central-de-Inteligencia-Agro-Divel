@@ -143,7 +143,7 @@
   <script type="module">
     import { auth, db } from './js/firebase.js';
     import { onAuthStateChanged, signOut } from 'https://www.gstatic.com/firebasejs/9.6.1/firebase-auth.js';
-    import { collection, getDocs, doc, setDoc, deleteDoc } from 'https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore.js';
+    import { collection, getDocs, doc, setDoc, getDoc } from 'https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore.js';
 
     const tabela = document.getElementById("tabela-revisoes");
     const filialSpan = document.getElementById("filial");
@@ -181,7 +181,11 @@
     });
 
     window.marcar = async function (id, fez) {
-      await setDoc(doc(db, "revisoes", id), {
+      const docRef = doc(db, "revisoes", id);
+      const existing = await getDoc(docRef);
+      const oldData = existing.exists() ? existing.data() : {};
+      await setDoc(docRef, {
+        ...oldData,
         feito: fez,
         motivo: fez ? "" : null,
         por: usuario,
@@ -199,7 +203,11 @@
     window.salvarMotivo = async function() {
       const motivo = motivoInput.value;
       if (!motivo) return alert("Preencha o motivo!");
-      await setDoc(doc(db, "revisoes", motivoId), {
+      const docRef = doc(db, "revisoes", motivoId);
+      const existing = await getDoc(docRef);
+      const oldData = existing.exists() ? existing.data() : {};
+      await setDoc(docRef, {
+        ...oldData,
         feito: false,
         motivo: motivo,
         por: usuario,
