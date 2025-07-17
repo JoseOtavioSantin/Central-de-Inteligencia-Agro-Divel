@@ -190,7 +190,7 @@
         for (let rev in contrato.revisoes) {
           const r = contrato.revisoes[rev];
           const statusClass = r.feito ? "feito" : "acao";
-          botoes += `<button class="${statusClass}" onclick="abrirModal(this, '${rev}', '${id}')">${r.horas}</button>`;
+          botoes += `<button class="${statusClass}" onclick="abrirModal(this, '${rev}', '${id}')">${rev}</button>`;
         }
 
         linha.innerHTML = `
