@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Dashboard - Revisões</title>
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      font-family: Arial, sans-serif;
+      background-color: #111;
+      color: #fff;
+    }
+    header {
+      background-color: #222;
+      padding: 15px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    header h1 {
+      margin: 0;
+      font-size: 20px;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 20px;
+    }
+    th, td {
+      border: 1px solid #333;
+      padding: 8px;
+      text-align: left;
+    }
+    th {
+      background-color: #444;
+    }
+    tr:nth-child(even) {
+      background-color: #1a1a1a;
+    }
+    button {
+      padding: 6px 12px;
+      margin-right: 5px;
+      cursor: pointer;
+    }
+    .motivo-input {
+      width: 90%;
+      margin-top: 5px;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Revisões Pendentes - <span id="filial"></span></h1>
+    <button onclick="logout()">Sair</button>
+  </header>
+
+  <main style="padding: 20px;">
+    <table>
+      <thead>
+        <tr>
+          <th>Cliente</th>
+          <th>Modelo</th>
+          <th>Horas Motor</th>
+          <th>Tipo Revisão</th>
+          <th>Status</th>
+        </tr>
+      </thead>
+      <tbody id="tabela-revisoes"></tbody>
+    </table>
+  </main>
+
+  <script type="module">
+    import { auth, db } from './js/firebase.js';
+    import { onAuthStateChanged, signOut } from 'https://www.gstatic.com/firebasejs/9.6.1/firebase-auth.js';
+    import { collection, getDocs, doc, setDoc } from 'https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore.js';
+
+    const tabela = document.getElementById("tabela-revisoes");
+    const filialSpan = document.getElementById("filial");
+
+    const usuario = localStorage.getItem("usuarioLogado") || "";
+    const filial = usuario.includes("rio") ? "Rio do Sul" : usuario.includes("campos") ? "Campos Novos" : "Lages";
+    filialSpan.textContent = filial;
+
+    onAuthStateChanged(auth, async (user) => {
+      if (!user) window.location.href = 'index.html';
+
+      const querySnapshot = await getDocs(collection(db, "revisoes"));
+      tabela.innerHTML = "";
+
+      querySnapshot.forEach(docu => {
+        const data = docu.data();
+        if (data.filial !== filial) return;
+
+        const tr = document.createElement("tr");
+        tr.innerHTML = `
+          <td>${data.cliente}</td>
+          <td>${data.modelo}</td>
+          <td>${data.horas}</td>
+          <td>${data.tipo}</td>
+          <td>
+            <button onclick="marcar('${docu.id}', true)">Fez</button>
+            <button onclick="mostrarMotivo('${docu.id}')">Não Fez</button>
+            <div id="motivo-${docu.id}" style="display:none">
+              <input class="motivo-input" id="input-${docu.id}" placeholder="Motivo" />
+              <button onclick="enviarMotivo('${docu.id}')">Salvar</button>
+            </div>
+          </td>
+        `;
+        tabela.appendChild(tr);
+      });
+    });
+
+    window.marcar = async function (id, fez) {
+      await setDoc(doc(db, "revisoes", id), {
+        feito: fez,
+        motivo: fez ? "" : null,
+        por: usuario,
+        data: new Date().toISOString(),
+      }, { merge: true });
+      alert("Atualizado!");
+      location.reload();
+    }
+
+    window.mostrarMotivo = function(id) {
+      document.getElementById(`motivo-${id}`).style.display = "block";
+    }
+
+    window.enviarMotivo = async function(id) {
+      const motivo = document.getElementById(`input-${id}`).value;
+      if (!motivo) return alert("Preencha o motivo!");
+      await setDoc(doc(db, "revisoes", id), {
+        feito: false,
+        motivo: motivo,
+        por: usuario,
+        data: new Date().toISOString(),
+      }, { merge: true });
+      alert("Motivo salvo!");
+      location.reload();
+    }
+
+    window.logout = async function () {
+      await signOut(auth);
+      localStorage.clear();
+      window.location.href = "index.html";
+    }
+  </script>
+</body>
+</html>
