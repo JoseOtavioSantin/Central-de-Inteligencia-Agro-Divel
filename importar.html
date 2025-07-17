@@ -51,28 +51,6 @@
     import { db } from './js/firebase.js';
     import { doc, setDoc } from 'https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore.js';
 
-    function getTipoRevisao(horas, modelo) {
-      const isColheitadeira = modelo.startsWith('CR') || modelo.toLowerCase().includes('colheit');
-
-      let pontosRevisao = isColheitadeira ? [100, 300, 600, 900, 1200] : [50, 300, 600, 900, 1200];
-      let tipo = '';
-
-      for (let i = 0; i < pontosRevisao.length; i++) {
-        if (horas < pontosRevisao[i]) {
-          tipo = `Revisão ${pontosRevisao[i]}h`;
-          break;
-        }
-      }
-
-      if (!tipo) {
-        // Se passou de 1200h, continua de 300 em 300
-        let proxima = Math.ceil((horas - 1200) / 300) * 300 + 1200;
-        tipo = `Revisão ${proxima}h`;
-      }
-
-      return tipo;
-    }
-
     window.importar = async function () {
       const input = document.getElementById('arquivo');
       const log = document.getElementById('log');
@@ -103,15 +81,12 @@
           else if (loc.includes('CAMPOS NOVOS')) filial = 'Campos Novos';
           else if (loc.includes('LAGES')) filial = 'Lages';
 
-          const tipo = getTipoRevisao(horas, modelo);
-
           const id = `${cliente}-${modelo}-${i}`.replace(/\s+/g, '-');
 
           const docData = {
             cliente,
             modelo,
             horas,
-            tipo,
             filial,
             feito: false,
             motivo: '',
