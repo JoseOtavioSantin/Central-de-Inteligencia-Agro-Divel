@@ -24,7 +24,7 @@ window.login = async function () {
     localStorage.setItem("usuarioLogado", email);
     localStorage.setItem("filialLogada", filial);
 
-    window.location.href = "dashboard.html";
+    window.location.href = "menu.html";
   } catch (error) {
     alert("Erro ao fazer login: " + error.message);
   }
