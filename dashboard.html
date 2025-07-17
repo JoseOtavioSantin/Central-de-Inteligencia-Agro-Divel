@@ -62,7 +62,23 @@
     th {
       background-color: #f0f0f0;
     }
-    button {
+    .botao-status {
+      padding: 6px 12px;
+      border: none;
+      border-radius: 4px;
+      font-size: 12px;
+      font-weight: bold;
+      cursor: default;
+    }
+    .sim {
+      background-color: #4caf50;
+      color: white;
+    }
+    .nao {
+      background-color: #f44336;
+      color: white;
+    }
+    button.acao {
       padding: 6px 12px;
       margin-right: 5px;
       border: none;
@@ -72,12 +88,40 @@
       color: white;
       font-size: 12px;
     }
-    .motivo-input {
+    .modal {
+      display: none;
+      position: fixed;
+      z-index: 1000;
+      left: 0;
+      top: 0;
       width: 100%;
-      margin-top: 8px;
+      height: 100%;
+      overflow: auto;
+      background-color: rgba(0, 0, 0, 0.5);
+    }
+    .modal-content {
+      background-color: #fff;
+      margin: 10% auto;
+      padding: 20px;
+      border: 1px solid #888;
+      width: 80%;
+      max-width: 400px;
+      border-radius: 8px;
+    }
+    .modal-content input {
+      width: 100%;
       padding: 8px;
+      margin-bottom: 10px;
       border-radius: 4px;
       border: 1px solid #ccc;
+    }
+    .modal-content button {
+      padding: 8px 16px;
+      border: none;
+      border-radius: 4px;
+      background-color: #212735;
+      color: #fff;
+      cursor: pointer;
     }
   </style>
 </head>
@@ -96,12 +140,21 @@
             <th>Modelo</th>
             <th>Chassis</th>
             <th>Horas Motor</th>
-            <th>Status</th>
+            <th>Revisão Feita</th>
+            <th>Ação</th>
           </tr>
         </thead>
         <tbody id="tabela-revisoes"></tbody>
       </table>
     </main>
+  </div>
+
+  <div id="motivoModal" class="modal">
+    <div class="modal-content">
+      <h3>Motivo da não realização</h3>
+      <input id="motivoInput" placeholder="Descreva o motivo..." />
+      <button onclick="salvarMotivo()">Salvar</button>
+    </div>
   </div>
 
   <script type="module">
@@ -111,6 +164,9 @@
 
     const tabela = document.getElementById("tabela-revisoes");
     const filialSpan = document.getElementById("filial");
+    const modal = document.getElementById("motivoModal");
+    const motivoInput = document.getElementById("motivoInput");
+    let motivoId = "";
 
     const usuario = localStorage.getItem("usuarioLogado") || "";
     const filial = localStorage.getItem("filialLogada") || "";
@@ -126,19 +182,18 @@
         const data = docu.data();
         if (data.filial !== filial) return;
 
+        const status = data.feito ? '<span class="botao-status sim">SIM</span>' : '<span class="botao-status nao">NÃO</span>';
+
         const tr = document.createElement("tr");
         tr.innerHTML = `
           <td>${data.cliente}</td>
           <td>${data.modelo}</td>
           <td>${data.chassis || '-'}</td>
           <td>${data.horas}</td>
+          <td>${status}</td>
           <td>
-            <button onclick="marcar('${docu.id}', true)">Fez</button>
-            <button onclick="mostrarMotivo('${docu.id}')">Não Fez</button>
-            <div id="motivo-${docu.id}" style="display:none">
-              <input class="motivo-input" id="input-${docu.id}" placeholder="Motivo" />
-              <button onclick="enviarMotivo('${docu.id}')">Salvar</button>
-            </div>
+            <button class="acao" onclick="marcar('${docu.id}', true)">SIM</button>
+            <button class="acao" onclick="mostrarPopup('${docu.id}')">NÃO</button>
           </td>
         `;
         tabela.appendChild(tr);
@@ -156,21 +211,30 @@
       location.reload();
     }
 
-    window.mostrarMotivo = function(id) {
-      document.getElementById(`motivo-${id}`).style.display = "block";
+    window.mostrarPopup = function(id) {
+      motivoId = id;
+      motivoInput.value = "";
+      modal.style.display = "block";
     }
 
-    window.enviarMotivo = async function(id) {
-      const motivo = document.getElementById(`input-${id}`).value;
+    window.salvarMotivo = async function() {
+      const motivo = motivoInput.value;
       if (!motivo) return alert("Preencha o motivo!");
-      await setDoc(doc(db, "revisoes", id), {
+      await setDoc(doc(db, "revisoes", motivoId), {
         feito: false,
         motivo: motivo,
         por: usuario,
         data: new Date().toISOString(),
       }, { merge: true });
+      modal.style.display = "none";
       alert("Motivo salvo!");
       location.reload();
+    }
+
+    window.onclick = function(event) {
+      if (event.target == modal) {
+        modal.style.display = "none";
+      }
     }
 
     window.logout = async function () {
