@@ -1,0 +1,106 @@
+/* Extracted from Gestores.html */
+* {
+      box-sizing: border-box;
+      font-family: Arial, sans-serif;
+    }
+
+    body {
+      margin: 0;
+      padding: 0;
+      background-color: #f9f9f9;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+    }
+
+    .container {
+      width: 100%;
+      max-width: 360px;
+      background: #001439;
+      border-radius: 12px;
+      box-shadow: 0 0 15px rgba(0, 0, 0, 0.05);
+      overflow: hidden;
+    }
+
+    .top-bar {
+      height: 30px;
+      background-color: #001439;
+      border-top-left-radius: 12px;
+      border-top-right-radius: 12px;
+    }
+
+    .content {
+      padding: 30px 20px;
+    }
+
+    .title {
+      font-weight: bold;
+      font-size: 18px;
+      margin-bottom: 5px;
+      color: #ffffff;
+    }
+
+    .subtitle {
+      font-size: 14px;
+      margin-bottom: 20px;
+      color: #ffffff;
+    }
+
+    label {
+      display: block;
+      font-size: 12px;
+      margin-bottom: 5px;
+      color: #ffffff;
+    }
+
+    input[type="email"],
+    input[type="password"] {
+      width: 100%;
+      padding: 12px;
+      margin-bottom: 15px;
+      border: none;
+      border-radius: 6px;
+      background-color: #e6e6e6;
+      font-size: 14px;
+    }
+
+    .password-wrapper {
+      position: relative;
+    }
+
+    .options {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 12px;
+      margin-bottom: 20px;
+    }
+
+    .login-btn {
+      width: 100%;
+      padding: 12px;
+      background-color: #ffffff;
+      border: none;
+      border-radius: 6px;
+      font-weight: bold;
+      color: #001439;
+      font-size: 14px;
+      margin-bottom: 15px;
+      cursor: pointer;
+    }
+
+    .register-link {
+      text-align: center;
+      font-size: 12px;
+      color: #ffffff;
+    }
+
+    .register-link a {
+      color: #ffffff;
+      text-decoration: none;
+    }
+
+    .register-link a:hover {
+      text-decoration: underline;
+    }
