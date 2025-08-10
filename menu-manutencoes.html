@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Agro Divel 360</title>
+<link href="manifest.json" rel="manifest"/>
+<meta content="#1e1e2f" name="theme-color"/>
+<link href="icons/icon-192.png" rel="icon"/>
+<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300&amp;display=swap" rel="stylesheet"/>
+<link href="/assets/css/menu-manutencoes.css" rel="stylesheet"/><link href="/src/styles/main.css" rel="stylesheet"/><link href="/src/styles/pages/menu-manutencoes.css" rel="stylesheet"/></head>
+<body>
+<div class="container">
+<div class="header">
+<img alt="Logo Agro Divel" src="assets/logo.png"/>
+<i class="fas fa-circle-info notification-icon" onclick="abrirPopup()"></i>
+<h1 class="frase-italico">Selecione o setor e conecte o cliente à solução ideal.</h1>
+</div>
+<div id="popup">
+<div id="popup-body">
+<p>Carregando...</p>
+</div>
+<div class="fechar" style="margin-top: 20px;">
+<button onclick="fecharPopup()">Fechar</button>
+</div>
+</div>
+<div class="dashboard">
+<a class="card" href="Dashboardplanomanutencao.html">
+<i class="fa-solid fa-comments-dollar"></i>
+<p>Indicações Consutores</p>
+</a>
+<a class="card" href="#">
+<i class="fas fa-lightbulb"></i>
+<p>Oportunidades</p>
+</a>
+<a class="card" href="Dashboardplanosvigentes.html">
+<i class="fas fa-clipboard-list"></i>
+<p>Planos Vigentes</p>
+</a>
+</div>
+</div>
+<div style="margin-top: 30px; display: flex; justify-content: center;">
+<button onclick="voltarPagina()" style="
+      background: linear-gradient(135deg, #00205b, #009bd6);
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 8px;
+      font-size: 14px;
+      cursor: pointer;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.4);
+    " title="Voltar">
+    ← Voltar
+  </button>
+</div>
+<!-- Aviso de atualização -->
+<div id="update-banner" style="
+  display: none;
+  background: #ffcc00;
+  color: #000;
+  font-weight: bold;
+  padding: 12px;
+  text-align: center;
+  cursor: pointer;
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 9999;
+">
+  ⚠️ Nova versão disponível. Clique aqui para atualizar.
+</div>
+<script src="/src/pages/menu-manutencoes.js" type="module"></script></body>
+</html>

@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Agro Divel 360</title>
+<link href="manifest.json" rel="manifest"/>
+<meta content="#1e1e2f" name="theme-color"/>
+<link href="icons/icon-192.png" rel="icon"/>
+<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300&amp;display=swap" rel="stylesheet"/>
+<link href="/assets/css/index.css" rel="stylesheet"/><link href="/src/styles/main.css" rel="stylesheet"/><link href="/src/styles/pages/index.css" rel="stylesheet"/></head>
+<body>
+<button id="instalarApp" style="display: none;">Instalar AgroDivel 360</button>
+<div class="container">
+<div class="header">
+<img alt="Logo Agro Divel" src="assets/logo.png"/>
+<i class="fas fa-circle-info notification-icon" onclick="abrirPopup()"></i>
+<h1 class="frase-italico">Selecione o setor e conecte o cliente à solução ideal.</h1>
+</div>
+<div id="popup">
+<div id="popup-body">
+<p>Carregando...</p>
+</div>
+<div class="fechar" style="margin-top: 20px;">
+<button onclick="fecharPopup()">Fechar</button>
+</div>
+</div>
+<div class="dashboard">
+<a class="card" href="form-pecas.html">
+<i class="fas fa-cogs"></i>
+<p>Peças</p>
+</a>
+<a class="card" href="form-servicos.html">
+<i class="fas fa-wrench"></i>
+<p>Serviços</p>
+</a>
+<a class="card" href="form-PLM.html">
+<i class="fa-solid fa-satellite"></i>
+<p>PLM</p>
+</a>
+<a class="card" href="form-comercial.html">
+<i class="fas fa-handshake"></i>
+<p>Comercial</p>
+</a>
+<a class="card" href="form-consorcio.html">
+<i class="fas fa-piggy-bank"></i>
+<p>Consórcio</p>
+</a>
+<a class="card" href="form-seguro.html">
+<i class="fa-solid fa-cloud"></i>
+<p>Seguro</p>
+</a>
+<a class="card" href="form-planodemanutencao.html">
+<i class="fa-solid fa-file"></i>
+<p>Plano de Manutenção</p>
+</a>
+<a class="card" href="cards-promo.html">
+<i class="fa-solid fa-tags"></i>
+<p>Promoções Ativas</p>
+</a>
+<a class="card" href="form-insatisfacao.html">
+<i class="fa-solid fa-circle-exclamation"></i>
+<p>Insatisfação do Cliente</p>
+</a>
+<a class="card" href="Gestores.html">
+<i class="fa-solid fa-chart-column"></i>
+<p>Dashboard</p>
+</a>
+</div>
+</div>
+<!-- Aviso de atualização -->
+<div id="update-banner" style="
+  display: none;
+  background: #ffcc00;
+  color: #000;
+  font-weight: bold;
+  padding: 12px;
+  text-align: center;
+  cursor: pointer;
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 9999;
+">
+  ⚠️ Nova versão disponível. Clique aqui para atualizar.
+</div>
+<script src="/src/pages/index.js" type="module"></script></body>
+</html>

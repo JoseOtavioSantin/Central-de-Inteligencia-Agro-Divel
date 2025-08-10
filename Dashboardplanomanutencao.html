@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8"/>
+<meta content="#2c2f3f" name="theme-color"/>
+<title>Dashboard com Filtros</title>
+<meta content="width=device-width, initial-scale=1.0" name="viewport">
+<script src="https://unpkg.com/lucide@latest"></script>
+<link href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css" rel="stylesheet"/>
+<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet"/>
+<script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+<script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/l10n/pt.js"></script>
+</meta><link href="/assets/css/dashboardplanomanutencao.css" rel="stylesheet"/><link href="/src/styles/main.css" rel="stylesheet"/><link href="/src/styles/pages/dashboardplanomanutencao.css" rel="stylesheet"/></head>
+<body>
+<header>
+<div style="display: flex; align-items: center; justify-content: space-between;">
+<img alt="Logo" class="logo" src="assets/logo.png"/>
+<div style="flex: 1; text-align: center;">
+<em>Dashboard Agro Divel 360 - Indicações Consultores</em>
+<div id="dynamic-title" style="font-style: italic;">Carregando...</div>
+</div>
+<div style="width: 65px;"></div>
+</div>
+</header>
+<button onclick="window.history.back()" style="
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    background: linear-gradient(135deg, #00205b, #009bd6);
+    color: white;
+    border: none;
+    margin-right; 10px;
+    padding: 10px 16px;
+    border-radius: 8px;
+    font-size: 14px;
+    cursor: pointer;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.4);
+    z-index: 9999;
+  " title="Voltar">
+  ← Voltar
+</button>
+<div class="main">
+<div class="sidebar">
+<div class="card pink-card">
+<h2 id="total-clientes">0</h2>
+<p><i data-lucide="users"></i> Total Clientes</p>
+</div>
+<div class="card orange-card">
+<h2 id="total-concluidos">0</h2>
+<p><i data-lucide="check-circle"></i> Concluídos</p>
+</div>
+<div class="card blue-card">
+<h2 id="valor-total">R$ 0,00</h2>
+<p><i data-lucide="dollar-sign"></i> Valor Total (R$)</p>
+</div>
+<div class="card purple-card">
+<h2 id="cancelados">0</h2>
+<p><i data-lucide="x-octagon"></i> Cancelados</p>
+</div>
+</div>
+<div class="content">
+<div class="filters">
+<input id="filtro-cliente" placeholder="Buscar cliente..." type="text"/>
+<select id="filtro-status">
+<option value="">Todos os status</option>
+<option value="Concluído">Concluído</option>
+<option value="Em andamento">Em andamento</option>
+<option value="Cancelado">Cancelado</option>
+</select>
+<input id="filtro-consultor" placeholder="Buscar consultor..." type="text"/>
+<input id="filtro-periodo" placeholder="Selecione o período"/>
+<button class="btn-acao" id="btn-exportar" style="margin-left: auto;" title="Exportar para Excel">
+<i data-lucide="download" style="width: 20px; height: 20px;"></i>
+</button>
+</div>
+<table>
+<thead>
+<tr>
+<th>Data da Visita</th>
+<th>Cliente</th>
+<th>Fazenda</th>
+<th>Município</th>
+<th>Consultor</th>
+<th>Modelo</th>
+<th>Horímetro</th>
+<th>Telefone</th>
+<th>Observações</th>
+<th>Checklist</th>
+<th>Ações</th>
+</tr>
+</thead>
+<tbody id="painel-detalhes"></tbody>
+</table>
+</div>
+</div>
+<!-- POPUP DE AÇÃO -->
+<div id="popup" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.6);justify-content:center;align-items:center;z-index:9999;">
+<div style="background:#2c2f3f;padding:20px;border-radius:12px;width:90%;max-width:400px;">
+<h3>Atualizar Checklist</h3>
+<input id="docIdSelecionado" type="hidden"/>
+<label>Comentário do Responsável</label>
+<textarea id="comentario" style="width:100%;padding:8px;margin-bottom:10px;border:none;border-radius:6px;"></textarea>
+<label>Status</label>
+<select id="statusChecklist" style="width:100%;padding:8px;margin-bottom:10px;border:none;border-radius:6px;">
+<option value="Em andamento">Em andamento</option>
+<option value="Concluído">Concluído</option>
+<option value="Cancelado">Cancelado</option>
+</select>
+<label>Valor Negociado (R$)</label>
+<input id="valorNegociado" style="width:100%;padding:8px;margin-bottom:10px;border:none;border-radius:6px;" type="number"/>
+<div style="text-align:right;">
+<button onclick="salvarPopup()" style="background:#00205b;color:white;padding:8px 16px;border-radius:8px;border:none;cursor:pointer;">Salvar</button>
+<button onclick="fecharPopup()" style="background:#444;color:white;padding:8px 16px;border-radius:8px;border:none;cursor:pointer;margin-left:10px;">Cancelar</button>
+</div>
+</div>
+</div>
+<!-- SEGUNDO POPUP: Dados de Conclusão -->
+<div id="popupConclusao" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.6);justify-content:center;align-items:center;z-index:9999;">
+<div style="background:#2c2f3f;padding:20px;border-radius:12px;width:90%;max-width:450px;">
+<h3>Dados do Contrato Concluído</h3>
+<label>Chassi</label>
+<input id="chassiFinal" style="width:100%;padding:8px;margin-bottom:10px;border:none;border-radius:6px;" type="text"/>
+<label>Horas Iniciais</label>
+<input id="horasIniciais" style="width:100%;padding:8px;margin-bottom:10px;border:none;border-radius:6px;" type="number"/>
+<label>Horas Finais</label>
+<input id="horasFinais" style="width:100%;padding:8px;margin-bottom:10px;border:none;border-radius:6px;" type="number"/>
+<label>Data Inicial do Contrato</label>
+<input id="dataInicioContrato" style="width:100%;padding:8px;margin-bottom:10px;border:none;border-radius:6px;" type="date"/>
+<label>Data Final do Contrato</label>
+<input id="dataFimContrato" style="width:100%;padding:8px;margin-bottom:10px;border:none;border-radius:6px;" type="date"/>
+<label>Checklist Realizado:</label>
+<div style="display:flex;flex-wrap:wrap;gap:10px;margin-bottom:10px;">
+<label><input type="checkbox" value="300"/> 300</label>
+<label><input type="checkbox" value="600"/> 600</label>
+<label><input type="checkbox" value="900"/> 900</label>
+<label><input type="checkbox" value="1200"/> 1200</label>
+</div>
+<div style="text-align:right;">
+<button onclick="salvarConclusao()" style="background:#00205b;color:white;padding:8px 16px;border-radius:8px;border:none;cursor:pointer;">Salvar</button>
+<button onclick="fecharPopupConclusao()" style="background:#444;color:white;padding:8px 16px;border-radius:8px;border:none;cursor:pointer;margin-left:10px;">Cancelar</button>
+</div>
+</div>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+<script src="/src/pages/dashboardplanomanutencao.js" type="module"></script></body>
+</html>

@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Login Gestores | Agro Divel</title>
+<meta content="#ffffff" name="theme-color"/>
+<link href="icons/icon-192.png" rel="apple-touch-icon"/>
+<!-- Firebase SDKs -->
+<link href="/assets/css/gestores.css" rel="stylesheet"/><link href="/src/styles/main.css" rel="stylesheet"/><link href="/src/styles/pages/gestores.css" rel="stylesheet"/></head>
+<body>
+<div class="container">
+<div class="top-bar"></div>
+<div style="margin-bottom: 10px; display: flex; justify-content: center;">
+<img alt="Agro Divel" src="assets/logo.png" style="width: 250px; height: auto;"/>
+</div>
+<div class="content">
+<div class="title">Área dos Gestores</div>
+<div class="subtitle">Acesso com E-mail e Senha restrito.</div>
+<label for="email">Digite seu E-mail</label>
+<input id="email" placeholder="E-mail" type="email"/>
+<label for="senha">Digite sua Senha:</label>
+<div class="password-wrapper">
+<input id="senha" placeholder="Senha" type="password"/>
+</div>
+<div class="options">
+<label><input id="lembrar" type="checkbox"/> Lembrar minha Senha.</label>
+<a href="recuperar.html">Esqueci minha Senha.</a>
+</div>
+<button class="login-btn" onclick="login()">ENTRAR</button>
+<div class="register-link">
+<a href="index.html">Voltar para início</a>
+</div>
+</div>
+</div>
+<!-- Script de login -->
+<script src="/src/pages/gestores.js" type="module"></script></body>
+</html>
